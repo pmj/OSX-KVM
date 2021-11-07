@@ -56,14 +56,15 @@ args=(
   -device ich9-ahci,id=sata
   -drive id=OpenCoreBoot,if=none,snapshot=on,format=qcow2,file="$REPO_PATH/OpenCore/OpenCore.qcow2"
   -device ide-hd,bus=sata.2,drive=OpenCoreBoot
-  -device ide-hd,bus=sata.3,drive=InstallMedia
-  -drive id=InstallMedia,if=none,file="$BASE_INSTALLER_IMAGE_PATH",format=raw
   -drive id=MacHDD,if=none,file="$MAIN_DISK_IMAGE_PATH",format=qcow2
-  -device ide-hd,bus=sata.4,drive=MacHDD
+  -device virtio-blk-pci,drive=MacHDD
   # -netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27
   -netdev user,id=net0 -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27
   -monitor stdio
   -device VGA,vgamem_mb=128
 )
+
+args+=( -drive id=InstallMedia,if=none,readonly=on,file="$BASE_INSTALLER_IMAGE_PATH",format=raw )
+args+=(  -device virtio-blk-pci,drive=InstallMedia )
 
 "$QEMU_EXE" "${args[@]}"
