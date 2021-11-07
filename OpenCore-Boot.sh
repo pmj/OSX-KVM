@@ -24,12 +24,15 @@ CPU_CORES="2"
 CPU_THREADS="4"
 
 REPO_PATH="."
-OVMF_DIR="."
+OVMF_DIR="ovmf-2/"
 QEMU_EXE="qemu-system-x86_64"
+#QEMU_EXE=~/devel/qemu/build/x86_64-softmmu/qemu-system-x86_64
 
 MAIN_DISK_IMAGE_PATH="$REPO_PATH/mac_hdd_ng.img"
+#MAIN_DISK_IMAGE_PATH="/Volumes/devtools/virtual-machines/saucelabs/macos-bigsur-osx-kvm-mac-host-offline/mac_hdd_ng.img"
 
 BASE_INSTALLER_IMAGE_PATH="$REPO_PATH/BaseSystem.img"
+#BASE_INSTALLER_IMAGE_PATH="/Volumes/devtools/macos-installers/11.6.1/macos-11.6.1-install-media.cdr"
 
 # This causes high cpu usage on the *host* side
 # qemu-system-x86_64 -enable-kvm -m 3072 -cpu Penryn,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,hypervisor=off,vmx=on,kvm=off,$MY_OPTIONS\
