@@ -26,7 +26,9 @@ CPU_THREADS="4"
 REPO_PATH="."
 OVMF_DIR="."
 QEMU_EXE="qemu-system-x86_64"
+
 MAIN_DISK_IMAGE_PATH="$REPO_PATH/mac_hdd_ng.img"
+
 BASE_INSTALLER_IMAGE_PATH="$REPO_PATH/BaseSystem.img"
 
 # This causes high cpu usage on the *host* side
@@ -67,4 +69,7 @@ args=(
 args+=( -drive id=InstallMedia,if=none,readonly=on,file="$BASE_INSTALLER_IMAGE_PATH",format=raw )
 args+=(  -device virtio-blk-pci,drive=InstallMedia )
 
+
+echo Qemu command line:
+echo "$QEMU_EXE" "${args[@]}"
 "$QEMU_EXE" "${args[@]}"
