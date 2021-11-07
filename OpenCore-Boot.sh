@@ -25,6 +25,9 @@ CPU_THREADS="4"
 
 REPO_PATH="."
 OVMF_DIR="."
+QEMU_EXE="qemu-system-x86_64"
+MAIN_DISK_IMAGE_PATH="$REPO_PATH/mac_hdd_ng.img"
+BASE_INSTALLER_IMAGE_PATH="$REPO_PATH/BaseSystem.img"
 
 # This causes high cpu usage on the *host* side
 # qemu-system-x86_64 -enable-kvm -m 3072 -cpu Penryn,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,hypervisor=off,vmx=on,kvm=off,$MY_OPTIONS\
@@ -48,8 +51,8 @@ args=(
   -drive id=OpenCoreBoot,if=none,snapshot=on,format=qcow2,file="$REPO_PATH/OpenCore/OpenCore.qcow2"
   -device ide-hd,bus=sata.2,drive=OpenCoreBoot
   -device ide-hd,bus=sata.3,drive=InstallMedia
-  -drive id=InstallMedia,if=none,file="$REPO_PATH/BaseSystem.img",format=raw
-  -drive id=MacHDD,if=none,file="$REPO_PATH/mac_hdd_ng.img",format=qcow2
+  -drive id=InstallMedia,if=none,file="$BASE_INSTALLER_IMAGE_PATH",format=raw
+  -drive id=MacHDD,if=none,file="$MAIN_DISK_IMAGE_PATH",format=qcow2
   -device ide-hd,bus=sata.4,drive=MacHDD
   # -netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27
   -netdev user,id=net0 -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27
@@ -57,4 +60,4 @@ args=(
   -device VGA,vgamem_mb=128
 )
 
-qemu-system-x86_64 "${args[@]}"
+"$QEMU_EXE" "${args[@]}"
