@@ -12,6 +12,7 @@ then
 	echo 'Neither option 1 nor 2 was selected, cancelling and exiting.'
 	exit 1
 elif [[ $REPLY == '1' ]] ; then
+	# Base System (recovery environment) chosen
 	echo 'Using Base System image. Would you like to download the macOS Big Sur (11.x) base system, or provide a previously downloaded BaseSystem.dmg file?'
 	echo '(D)ownload'
 	echo '(U)se existing base image'
@@ -57,6 +58,7 @@ elif [[ $REPLY == '1' ]] ; then
 	echo "Obtaining and converting base image succeeded, now create a VM by running the next script:"
 	echo ./mac-host-3-create-and-install-vm.sh \"path/to/vm-root-drive.img\" 128G \"$BASE_SYSTEM_RAW_PATH\"	
 else
+	# Download of full offline installer selected
 	echo 'Using Full Install System image. Would you like to download the macOS Big Sur (11.x) installer, or provide a previously downloaded Install macOS Big Sur.app?'
 	echo '(D)ownload'
 	echo '(U)se existing base image'
@@ -79,8 +81,65 @@ else
 		read -p "Please enter the macOS installer app's full path or drag & drop the installer here. " MACOS_INSTALLER_APP_PATH
 	fi
 
-	
+	# The installer app bundle is step 1. We then need to:
+	# - Create a disk image
+	# - Attach & mount it
+	# - Create "install media" in that disk image
+	# - Convert the disk image into a raw ("CD/DVD master") image
+	# - Clean up
 
+	temp_dir=`mktemp -d -t macos-virt`
+	installer_image_path="$temp_dir/install-macos.sparseimage"
+	installer_raw_image_path=`pwd`/install-macos.cdr
+	
+	echo "Creating disk image for installer at $installer_image_path"
+	echo hdiutil create -size 14G -fs hfs+ -volname 'Install macOS' -type SPARSE "$installer_image_path"
+	if ! ( hdiutil create -size 14G -fs hfs+ -volname 'Install macOS' -type SPARSE "$installer_image_path" ) ; then
+		echo Exiting due to error during image creation.
+		exit 1
+	fi
+	
+	installer_image_mount_path="$temp_dir/install-macos-mount"
+	echo "Mounting newly created image at $installer_image_mount_path"
+	echo mkdir -p "$installer_image_mount_path" && hdiutil attach "$installer_image_path" -mountpoint "$installer_image_mount_path" -nobrowse
+	
+	if ! ( mkdir -p "$installer_image_mount_path" && hdiutil attach "$installer_image_path" -mountpoint "$installer_image_mount_path" -nobrowse > "$temp_dir/hdiutil-attach-output.txt" )  ; then
+		echo Exiting due to error during image mount. Cleaning up...
+		rm -f "$installer_image_path"
+		exit 1
+	fi
+	
+	disk_image_device=$( sed -n -E 's/(\/dev\/disk[0-9]+).*/\1/p' "$temp_dir/hdiutil-attach-output.txt" | tail -n 1 )
+	echo "Image attached as $disk_image_device"
+	
+	echo "Creating install media in disk image. Admin privileges required…"
+	echo sudo "$MACOS_INSTALLER_APP_PATH/Contents/Resources/createinstallmedia" --volume "$installer_image_mount_path" --nointeraction
+	if ! ( sudo "$MACOS_INSTALLER_APP_PATH/Contents/Resources/createinstallmedia" --volume "$installer_image_mount_path" --nointeraction ) ; then
+		echo Exiting due to error during createinstallmedia process. Cleaning up...
+		echo hdiutil detach "$disk_image_device"
+		hdiutil detach "$disk_image_device"
+		echo rm -f "$installer_image_path"
+		rm -f "$installer_image_path"
+		exit 1
+	fi
+	
+	echo "Detaching/unmounting disk images"
+	for i in "/Volumes/Shared Support"* ; do
+		echo hdiutil detach "$i"
+		hdiutil detach "$i"
+	done
+	echo hdiutil detach "$disk_image_device"
+	hdiutil detach "$disk_image_device"
+	
+	echo "Converting disk image to raw"
+	echo hdiutil convert "$installer_image_path" -format UDTO -o "$installer_raw_image_path"
+	hdiutil convert "$installer_image_path" -format UDTO -o "$installer_raw_image_path"
+	
+	echo "Cleaning up: deleting intermediate image file"
+	echo rm -f "$installer_image_path"
+	rm -f "$installer_image_path"
+	
+	echo "Raw installer image ready to be used by Qemu is at $installer_raw_image_path"
 fi
 
 
