@@ -31,7 +31,7 @@ QEMU_EXE="qemu-system-x86_64"
 MAIN_DISK_IMAGE_PATH="$REPO_PATH/mac_hdd_ng.img"
 #MAIN_DISK_IMAGE_PATH="/Volumes/devtools/virtual-machines/saucelabs/macos-bigsur-osx-kvm-mac-host-offline/mac_hdd_ng.img"
 
-BASE_INSTALLER_IMAGE_PATH="$REPO_PATH/BaseSystem.img"
+BASE_INSTALLER_IMAGE_PATH="$REPO_PATH/installer.qcow2"
 #BASE_INSTALLER_IMAGE_PATH="/Volumes/devtools/macos-installers/11.6.1/macos-11.6.1-install-media.cdr"
 
 # This causes high cpu usage on the *host* side
@@ -69,7 +69,7 @@ args=(
   -device VGA,vgamem_mb=128
 )
 
-args+=( -drive id=InstallMedia,if=none,readonly=on,file="$BASE_INSTALLER_IMAGE_PATH",format=raw )
+args+=( -drive id=InstallMedia,if=none,readonly=on,file="$BASE_INSTALLER_IMAGE_PATH",format=qcow2 )
 args+=(  -device virtio-blk-pci,drive=InstallMedia )
 
 

@@ -55,8 +55,15 @@ elif [[ $REPLY == '1' ]] ; then
 		exit 1
 	fi
 	
-	echo "Obtaining and converting base image succeeded, now create a VM by running the next script:"
-	echo ./mac-host-3-create-and-install-vm.sh \"path/to/vm-root-drive.img\" 128G \"$BASE_SYSTEM_RAW_PATH\"	
+	echo "Creating shallow qcow2 image for base system"
+	echo rm -f installer.qcow2
+	rm -f installer.qcow2
+	echo qemu-img create -f qcow2 -b "$BASE_SYSTEM_RAW_PATH" -F raw installer.qcow2
+	qemu-img create -f qcow2 -b "$BASE_SYSTEM_RAW_PATH" -F raw installer.qcow2
+	
+	echo "Base system raw image is at $BASE_SYSTEM_RAW_PATH, installer.qcow2 references it"
+
+	echo "Obtaining and converting base image succeeded, now create a root image by running ./mac-host-3-prepare-root-image.sh"
 else
 	# Download of full offline installer selected
 	echo 'Using Full Install System image. Would you like to download the macOS Big Sur (11.x) installer, or provide a previously downloaded Install macOS Big Sur.app?'
@@ -139,7 +146,15 @@ else
 	echo rm -f "$installer_image_path"
 	rm -f "$installer_image_path"
 	
-	echo "Raw installer image ready to be used by Qemu is at $installer_raw_image_path"
+	echo "Creating shallow qcow2 installer image"
+	echo rm -f installer.qcow2
+	rm -f installer.qcow2
+	echo qemu-img create -f qcow2 -b "$installer_raw_image_path" -F raw installer.qcow2
+	qemu-img create -f qcow2 -b "$installer_raw_image_path" -F raw installer.qcow2
+	
+	echo "Raw installer image is at $installer_raw_image_path, installer.qcow2 references it"
+
+	echo "Obtaining and converting macOS installer image succeeded, now create a root image by running ./mac-host-3-prepare-root-image.sh"
 fi
 
 
